@@ -17,12 +17,19 @@ let textureWater;
 let textureSand;
 let textureGrass;
 let textureStone;
+let textureRock;
+
+const rocksValueMin = 0.3;
+const rocksValueMax = 0.55;
+const rocksDensity = 0.2;
+const rockSize = 14;
 
 function preload() {
   textureWater = loadImage("textures/water.jpg");
   textureSand = loadImage("textures/sand.jpg");
   textureGrass = loadImage("textures/grass.jpg");
   textureStone = loadImage("textures/stone.jpg");
+  textureRock = loadImage("assets/rock.png");
 }
 
 function setup() {
@@ -32,6 +39,8 @@ function setup() {
 
   generateGridValues();
   drawIsland();
+  const rockPositions = placeRocks();
+  drawRocks(rockPositions);
 }
 
 function generateGridValues() {
@@ -56,6 +65,34 @@ function drawIsland() {
         cellWidth,
         cellHeight
       );
+    }
+  }
+}
+
+function placeRocks() {
+  const positions = [];
+  const numSamples = max(1, floor(gridColumns * gridRows * rocksDensity));
+
+  for (let i = 0; i < numSamples; i++) {
+    const x = random(width);
+    const y = random(height);
+    const col = floor(x / cellWidth);
+    const row = floor(y / cellHeight);
+
+    if (col < 0 || col >= gridColumns || row < 0 || row >= gridRows) continue;
+
+    const cellValue = grid[row][col];
+    if (cellValue >= rocksValueMin && cellValue <= rocksValueMax) {
+      positions.push({ x, y });
+    }
+  }
+  return positions;
+}
+
+function drawRocks(positions) {
+  for (const { x, y } of positions) {
+    if (textureRock && textureRock.width > 0) {
+      image(textureRock, x - rockSize / 2, y - rockSize / 2, rockSize, rockSize);
     }
   }
 }
