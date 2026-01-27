@@ -18,11 +18,17 @@ let textureSand;
 let textureGrass;
 let textureStone;
 let textureRock;
+let textureBush;
 
 const rocksValueMin = 0.3;
 const rocksValueMax = 0.55;
-const rocksDensity = 0.2;
-const rockSize = 14;
+const rocksDensity = 0.05;
+const rockSize = 8;
+
+const bushValueMin = 0.35;
+const bushValueMax = 0.7;
+const bushDensity = 0.15;
+const bushSize = 20;
 
 function preload() {
   textureWater = loadImage("textures/water.jpg");
@@ -30,6 +36,7 @@ function preload() {
   textureGrass = loadImage("textures/grass.jpg");
   textureStone = loadImage("textures/stone.jpg");
   textureRock = loadImage("assets/rock.png");
+  textureBush = loadImage("assets/bush.png");
 }
 
 function setup() {
@@ -41,6 +48,8 @@ function setup() {
   drawIsland();
   const rockPositions = placeRocks();
   drawRocks(rockPositions);
+  const bushPositions = placeBushes();
+  drawBushes(bushPositions);
 }
 
 function generateGridValues() {
@@ -93,6 +102,34 @@ function drawRocks(positions) {
   for (const { x, y } of positions) {
     if (textureRock && textureRock.width > 0) {
       image(textureRock, x - rockSize / 2, y - rockSize / 2, rockSize, rockSize);
+    }
+  }
+}
+
+function placeBushes() {
+  const positions = [];
+  const numSamples = max(1, floor(gridColumns * gridRows * bushDensity));
+
+  for (let i = 0; i < numSamples; i++) {
+    const x = random(width);
+    const y = random(height);
+    const col = floor(x / cellWidth);
+    const row = floor(y / cellHeight);
+
+    if (col < 0 || col >= gridColumns || row < 0 || row >= gridRows) continue;
+
+    const cellValue = grid[row][col];
+    if (cellValue >= bushValueMin && cellValue <= bushValueMax) {
+      positions.push({ x, y });
+    }
+  }
+  return positions;
+}
+
+function drawBushes(positions) {
+  for (const { x, y } of positions) {
+    if (textureBush && textureBush.width > 0) {
+      image(textureBush, x - bushSize / 2, y - bushSize / 2, bushSize, bushSize);
     }
   }
 }
