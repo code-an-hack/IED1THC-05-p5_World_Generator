@@ -46,102 +46,58 @@ function setup() {
 
   generateGridValues();
   drawIsland();
-  const rockPositions = placeRocks();
-  drawRocks(rockPositions);
-  const bushPositions = placeBushes();
-  drawBushes(bushPositions);
+  drawDecorations(placeDecorations(rocksValueMin, rocksValueMax, rocksDensity), textureRock, rockSize);
+  drawDecorations(placeDecorations(bushValueMin, bushValueMax, bushDensity), textureBush, bushSize);
 }
 
 function generateGridValues() {
-    for (let rowIndex = 0; rowIndex < gridRows; rowIndex++) {
-    grid[rowIndex] = [];
-    for (let columnIndex = 0; columnIndex < gridColumns; columnIndex++) {
-      grid[rowIndex][columnIndex] = getCellValue(columnIndex, rowIndex);
+  for (let i = 0; i < gridRows; i++) {
+    grid[i] = [];
+    for (let j = 0; j < gridColumns; j++) {
+      grid[i][j] = getCellValue(j, i);
     }
   }
 }
 
 function drawIsland() {
   noStroke();
-  for (let rowIndex = 0; rowIndex < gridRows; rowIndex++) {
-    for (let columnIndex = 0; columnIndex < gridColumns; columnIndex++) {
-      const cellValue = grid[rowIndex][columnIndex];
+  for (let i = 0; i < gridRows; i++) {
+    for (let j = 0; j < gridColumns; j++) {
+      const cellValue = grid[i][j];
       const texture = getTextureForValue(cellValue);
-      image(
-        texture,
-        columnIndex * cellWidth,
-        rowIndex * cellHeight,
-        cellWidth,
-        cellHeight
-      );
+      image(texture, j * cellWidth, i * cellHeight, cellWidth, cellHeight);
     }
   }
 }
 
-function placeRocks() {
+function placeDecorations(valueMin, valueMax, density) {
   const positions = [];
-  const numSamples = max(1, floor(gridColumns * gridRows * rocksDensity));
-
-  for (let i = 0; i < numSamples; i++) {
+  const n = max(1, floor(gridColumns * gridRows * density));
+  for (let i = 0; i < n; i++) {
     const x = random(width);
     const y = random(height);
     const col = floor(x / cellWidth);
     const row = floor(y / cellHeight);
-
     if (col < 0 || col >= gridColumns || row < 0 || row >= gridRows) continue;
-
-    const cellValue = grid[row][col];
-    if (cellValue >= rocksValueMin && cellValue <= rocksValueMax) {
-      positions.push({ x, y });
-    }
+    const v = grid[row][col];
+    if (v >= valueMin && v <= valueMax) positions.push({ x, y });
   }
   return positions;
 }
 
-function drawRocks(positions) {
-  for (const { x, y } of positions) {
-    if (textureRock && textureRock.width > 0) {
-      image(textureRock, x - rockSize / 2, y - rockSize / 2, rockSize, rockSize);
-    }
+function drawDecorations(positions, texture, size) {
+  if (!texture || texture.width <= 0) return;
+  const half = size / 2;
+  for (let i = 0; i < positions.length; i++) {
+    const { x, y } = positions[i];
+    image(texture, x - half, y - half, size, size);
   }
 }
 
-function placeBushes() {
-  const positions = [];
-  const numSamples = max(1, floor(gridColumns * gridRows * bushDensity));
-
-  for (let i = 0; i < numSamples; i++) {
-    const x = random(width);
-    const y = random(height);
-    const col = floor(x / cellWidth);
-    const row = floor(y / cellHeight);
-
-    if (col < 0 || col >= gridColumns || row < 0 || row >= gridRows) continue;
-
-    const cellValue = grid[row][col];
-    if (cellValue >= bushValueMin && cellValue <= bushValueMax) {
-      positions.push({ x, y });
-    }
-  }
-  return positions;
+function getCellValue(col, row) {
+  const n = noise(col * perlinNoiseScale, row * perlinNoiseScale);
+  return constrain(n * getRadialFactor(col, row), 0, 1);
 }
-
-function drawBushes(positions) {
-  for (const { x, y } of positions) {
-    if (textureBush && textureBush.width > 0) {
-      image(textureBush, x - bushSize / 2, y - bushSize / 2, bushSize, bushSize);
-    }
-  }
-}
-
-function getCellValue(columnIndex, rowIndex) {
-    const noiseValue = noise(
-      columnIndex * perlinNoiseScale,
-      rowIndex * perlinNoiseScale
-    );
-    const radialFactor = getRadialFactor(columnIndex, rowIndex);
-    return constrain(noiseValue * radialFactor, 0, 1);
-  }
   
 function getTextureForValue(normalizedValue) {
   if (normalizedValue < thresholdWater) return textureWater;
@@ -150,17 +106,13 @@ function getTextureForValue(normalizedValue) {
   return textureStone;
 }
 
-function getRadialFactor(columnIndex, rowIndex) {
-  const centerColumn = (gridColumns - 1) / 2;
-  const centerRow = (gridRows - 1) / 2;
-  const maxDistanceFromCenter = dist(0, 0, centerColumn, centerRow);
-  const distanceFromCenter = dist(columnIndex, rowIndex, centerColumn, centerRow);
-  const normalizedDistance = distanceFromCenter / maxDistanceFromCenter;
-
-  const start = radialGradientStart;
-  const end = radialGradientEnd;
-
-  if (normalizedDistance <= start) return 1;
-  if (normalizedDistance >= end) return 0;
-  return map(normalizedDistance, start, end, 1, 0);
+function getRadialFactor(col, row) {
+  const cx = (gridColumns - 1) / 2;
+  const cy = (gridRows - 1) / 2;
+  const maxD = dist(0, 0, cx, cy);
+  const d = dist(col, row, cx, cy);
+  const t = d / maxD;
+  if (t <= radialGradientStart) return 1;
+  if (t >= radialGradientEnd) return 0;
+  return map(t, radialGradientStart, radialGradientEnd, 1, 0);
 }
