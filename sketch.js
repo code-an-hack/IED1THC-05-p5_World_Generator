@@ -46,8 +46,10 @@ function setup() {
 
   generateGridValues();
   drawIsland();
-  drawDecorations(placeDecorations(rocksValueMin, rocksValueMax, rocksDensity), textureRock, rockSize);
-  drawDecorations(placeDecorations(bushValueMin, bushValueMax, bushDensity), textureBush, bushSize);
+  const rocksPositions = placeAssets(rocksValueMin, rocksValueMax, rocksDensity);
+  const bushPositions = placeAssets(bushValueMin, bushValueMax, bushDensity);
+  drawAssets(rocksPositions, textureRock, rockSize);
+  drawAssets(bushPositions, textureBush, bushSize);
 }
 
 function generateGridValues() {
@@ -70,7 +72,7 @@ function drawIsland() {
   }
 }
 
-function placeDecorations(valueMin, valueMax, density) {
+function placeAssets(valueMin, valueMax, density) {
   const positions = [];
   const n = max(1, floor(gridColumns * gridRows * density));
   for (let i = 0; i < n; i++) {
@@ -85,7 +87,7 @@ function placeDecorations(valueMin, valueMax, density) {
   return positions;
 }
 
-function drawDecorations(positions, texture, size) {
+function drawAssets(positions, texture, size) {
   if (!texture || texture.width <= 0) return;
   const half = size / 2;
   for (let i = 0; i < positions.length; i++) {
